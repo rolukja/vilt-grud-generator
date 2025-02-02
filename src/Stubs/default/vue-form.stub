@@ -15,9 +15,9 @@ const form = reactive({
 
 const submit = () => {
   if (form.id) {
-    router.put(`/{{ model }}/${form.id}`, form);
+    router.put(route('{{ model }}.update', form.id), form);
   } else {
-    router.post('/{{ model }}', form);
+    router.post(route('{{ model }}.store'), form);
   }
 };
 </script>

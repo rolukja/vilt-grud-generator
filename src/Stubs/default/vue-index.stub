@@ -7,16 +7,16 @@ const props = defineProps({
 });
 
 const createNew = () => {
-  router.visit('/{{ model }}/create');
+  router.visit(route('{{ model }}.create'));
 };
 
 const edit = (id) => {
-  router.visit(`/{{ model }}/${id}/edit`);
+  router.visit(route('{{ model }}.edit', id));
 };
 
 const remove = (id) => {
   if (confirm('Are you sure you want to delete this {{ model }}?')) {
-    router.delete(`/{{ model }}/${id}`);
+    router.delete(route('{{ model }}.destroy', id));
   }
 };
 </script>
