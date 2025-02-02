@@ -1,0 +1,7 @@
+
+
+
+
+
+php artisan vendor:publish --provider="ViltCrudGenerator\Providers\ViltCrudGeneratorServiceProvider"
+
