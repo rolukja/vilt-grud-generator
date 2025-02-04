@@ -232,4 +232,55 @@ class GenerateCrudCommand extends Command
         return "<input type=\"{$fieldType}\" v-model=\"form.{$field}\" placeholder=\"Enter {$field}\" />\n";
     }
 
+    private function getModelObjectByName($modelName): ?object
+    {
+        $modelClass = "App\\Models\\{$modelName}";
+        if ( ! class_exists($modelClass)) {
+            $this->error("Model-Klasse {$modelClass} nicht gefunden.");
+            return null;
+        }
+
+        return (new $modelClass);
+    }
+
+
+    public function getFillableFieldsWithTypes(string $modelName): array
+    {
+        $model = $this->getModelObjectByName($modelName);
+        $table = $model->getTable();
+        $fillableFields = $model->getFillable();
+        $fieldsWithTypes = [];
+
+        // Alle Spalten aus der Datenbank abrufen
+        $columns = collect(DB::select(
+            "SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_KEY, CHARACTER_MAXIMUM_LENGTH, COLUMN_DEFAULT 
+         FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ?", [$table]
+        ))->unique('COLUMN_NAME'); // Doppelte Spalten verhindern
+
+        foreach ($columns as $column) {
+            $field = $column->COLUMN_NAME;
+            $type = $column->DATA_TYPE;
+            $isNullable = $column->IS_NULLABLE === 'YES';
+            $isPrimaryKey = $column->COLUMN_KEY === 'PRI';
+            $isForeignKey = str_ends_with($field, '_id');
+            $maxLength = $column->CHARACTER_MAXIMUM_LENGTH;
+            $defaultValue = $column->COLUMN_DEFAULT;
+
+            $fieldData = [
+                'field' => $field,
+                'type' => $isForeignKey ? Str::studly(str_replace('_id', '', $field)) : $type,
+                'required' => !$isNullable,
+                'primary' => $isPrimaryKey,
+                'foreign' => $isForeignKey,
+                'max_length' => $maxLength,
+                'default' => $defaultValue,
+            ];
+
+            $fieldsWithTypes[] = $fieldData;
+        }
+
+        return $fieldsWithTypes;
+    }
+
+
 }
