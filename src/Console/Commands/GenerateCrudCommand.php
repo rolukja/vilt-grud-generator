@@ -3,7 +3,10 @@
 namespace ViltCrudGenerator\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -12,8 +15,17 @@ class GenerateCrudCommand extends Command
     protected $signature = 'vilt:generate {model}';
     protected $description = 'Generiert ein komplettes CRUD für das angegebene Model';
 
-    public function handle()
+
+    protected array $ignoreFields = ['id', 'created_at', 'updated_at'];
+
+
+    protected array $dbTableSchema = [];
+
+
+    public function handle(): void
     {
+
+
         $model = $this->argument('model');
         $modelPath = app_path("Models/{$model}.php");
 
@@ -22,14 +34,32 @@ class GenerateCrudCommand extends Command
             return;
         }
 
-        // Generiere files from Stubs
-        $this->generateController($model);
-        $this->generateRoutes($model);
-        $this->generateVueComponents($model);
+        $this->dbTableSchema = $this->getFillableFieldsWithTypes($this->argument('model'));
 
+        if (empty($this->dbTableSchema)) {
+            $this->error("Table Schema for {$model} not found.");
+            return;
+        }
 
-        $this->info("CRUD für {$model} wurde erfolgreich generiert!");
+        $this->runCommands($model);
+
     }
+
+
+    private function runCommands($modelName): void
+    {
+
+        try {
+            $this->generateController($modelName);
+            $this->generateRoutes($modelName);
+            $this->generateVueComponents($modelName);
+            $this->info("CRUD für {$modelName} wurde erfolgreich erstellt.");
+        } catch (\Exception $e) {
+            $this->error($e->getMessage());
+        }
+
+    }
+
 
     private function getStubPath($stubFile): ?string
     {
@@ -73,8 +103,9 @@ class GenerateCrudCommand extends Command
 
         $stub = $this->setStubPlaceholder($stub, [
             '{{ namespace }}'       => $this->getControllerNamespace(),
-            '{{ model }}'           => $model,
-            '{{ entity }}'          => Str::lower($model),
+            '{{ Model }}'           => $model,
+            '{{ validRules }}'      => $this->getValidationRulesFromDbTableSchema(),
+            '{{ model }}'           => Str::lower($model),
             '{{ controllerClass }}' => $model . 'Controller'
         ]);
 
@@ -96,6 +127,12 @@ class GenerateCrudCommand extends Command
         $routeStub = File::get($stubPath);
         $routeStub = str_replace(array('{{ model }}', '{{ Model }}'), array(Str::lower($model), $model), $routeStub);
 
+        $routeStub = $this->setStubPlaceholder($routeStub, [
+            '{{ model }}'      => Str::lower($model),
+            '{{ Model }}'      => $model,
+            '{{ Controller }}' => "App\Http\Controllers\\{$model}Controller",
+        ]);
+
         // Überprüfen, ob die Route bereits existiert
         $currentRoutes = File::exists($routeFile) ? File::get($routeFile) : '';
         if (str_contains($currentRoutes, $routeStub)) {
@@ -106,6 +143,7 @@ class GenerateCrudCommand extends Command
         File::append($routeFile, "\n" . $routeStub);
         $this->info("Route für {$model} wurde zu `web.php` hinzugefügt.");
     }
+
     private function generateVueComponents($model): void
     {
         $this->generateVueForm($model);
@@ -116,7 +154,7 @@ class GenerateCrudCommand extends Command
     private function generateVueForm($model): void
     {
         $stubPath = $this->getStubPath('vue-form.stub');
-        if (!$stubPath) {
+        if ( ! $stubPath) {
             $this->error("Vue-Form-Stub nicht gefunden");
             return;
         }
@@ -125,12 +163,12 @@ class GenerateCrudCommand extends Command
         File::ensureDirectoryExists(dirname($vuePath));
 
         $stub = File::get($stubPath);
-        $fieldsMarkup = $this->generateVueFormFields($model);
 
         $stub = $this->setStubPlaceholder($stub, [
-            '{{ model }}' => Str::lower($model),
-            '{{ Model }}' => $model,
-            '{{ layoutName }}' => $this->getLayoutName()
+            '{{ model }}'      => Str::lower($model),
+            '{{ Model }}'      => $model,
+            '{{ layoutName }}' => $this->getLayoutName(),
+            '{{ fields }}'     => $this->generateVueFormFields($model),
         ]);
 
         File::put($vuePath, $stub);
@@ -140,7 +178,7 @@ class GenerateCrudCommand extends Command
     private function generateVueIndex($model): void
     {
         $stubPath = $this->getStubPath('vue-index.stub');
-        if (!$stubPath) {
+        if ( ! $stubPath) {
             $this->error("Vue-Index-Stub nicht gefunden");
             return;
         }
@@ -151,8 +189,10 @@ class GenerateCrudCommand extends Command
         $stub = File::get($stubPath);
 
         $stub = $this->setStubPlaceholder($stub, [
-            '{{ model }}' => Str::lower($model),
-            '{{ Model }}' => $model,
+            '{{ th }}'         => $this->getHtmlTableHeadFromDbTableSchema(),
+            '{{ td }}'         => $this->getHtmlTableDataFromDbTableSchema(),
+            '{{ model }}'      => Str::lower($model),
+            '{{ Model }}'      => $model,
             '{{ layoutName }}' => $this->getLayoutName()
         ]);
 
@@ -163,7 +203,7 @@ class GenerateCrudCommand extends Command
     private function generateVueShow($model): void
     {
         $stubPath = $this->getStubPath('vue-show.stub');
-        if (!$stubPath) {
+        if ( ! $stubPath) {
             $this->error("Vue-Show-Stub nicht gefunden");
             return;
         }
@@ -174,8 +214,8 @@ class GenerateCrudCommand extends Command
         $stub = File::get($stubPath);
 
         $stub = $this->setStubPlaceholder($stub, [
-            '{{ model }}' => Str::lower($model),
-            '{{ Model }}' => $model,
+            '{{ model }}'      => Str::lower($model),
+            '{{ Model }}'      => $model,
             '{{ layoutName }}' => $this->getLayoutName()
         ]);
 
@@ -200,16 +240,8 @@ class GenerateCrudCommand extends Command
 
     private function generateVueFormFields($model): string
     {
-        $modelClass = "App\\Models\\{$model}";
-        if (!class_exists($modelClass)) {
-            $this->error("Model-Klasse {$modelClass} nicht gefunden.");
-            return '';
-        }
-
-        $fillableFields = (new $modelClass)->getFillable();
         $fieldsMarkup = '';
-
-        foreach ($fillableFields as $field) {
+        foreach ($this->getModelObjectByName($model) as $field) {
             $fieldsMarkup .= $this->generateVueField($field);
         }
 
@@ -258,6 +290,11 @@ class GenerateCrudCommand extends Command
         ))->unique('COLUMN_NAME'); // Doppelte Spalten verhindern
 
         foreach ($columns as $column) {
+
+            if($this->ignoreFields && in_array($column->COLUMN_NAME, $this->ignoreFields, true)){
+                continue;
+            }
+
             $field = $column->COLUMN_NAME;
             $type = $column->DATA_TYPE;
             $isNullable = $column->IS_NULLABLE === 'YES';
@@ -267,13 +304,13 @@ class GenerateCrudCommand extends Command
             $defaultValue = $column->COLUMN_DEFAULT;
 
             $fieldData = [
-                'field' => $field,
-                'type' => $isForeignKey ? Str::studly(str_replace('_id', '', $field)) : $type,
-                'required' => !$isNullable,
-                'primary' => $isPrimaryKey,
-                'foreign' => $isForeignKey,
+                'field'      => $field,
+                'type'       => $isForeignKey ? Str::studly(str_replace('_id', '', $field)) : $type,
+                'required'   => ! $isNullable,
+                'primary'    => $isPrimaryKey,
+                'foreign'    => $isForeignKey,
                 'max_length' => $maxLength,
-                'default' => $defaultValue,
+                'default'    => $defaultValue,
             ];
 
             $fieldsWithTypes[] = $fieldData;
@@ -282,5 +319,41 @@ class GenerateCrudCommand extends Command
         return $fieldsWithTypes;
     }
 
+    private function getHtmlTableHeadFromDbTableSchema(): string
+    {
+        $html = '';
+        foreach ($this->dbTableSchema as $field) {
+            $html .= "<th class='border border-gray-300 p-2'>{$field['field']}</th>\n";
+        }
+
+        return $html;
+    }
+
+    private function getHtmlTableDataFromDbTableSchema(): string
+    {
+
+        $html = '';
+        foreach ($this->dbTableSchema as $field) {
+            $html .= "<td class='border border-gray-300 p-2'>{{item.".$field['field']."}}</td>\n";
+        }
+
+        return $html;
+    }
+
+
+    private function getValidationRulesFromDbTableSchema(): string
+    {
+
+        $rules = '';
+        foreach ($this->dbTableSchema as $field) {
+            if ($field['field'] === 'id' || $field['field'] === 'created_at' || $field['field'] === 'updated_at') {
+                continue;
+            }
+
+            $rules .= "'{$field['field']}' => ['required'],\n";
+        }
+
+        return $rules;
+    }
 
 }
