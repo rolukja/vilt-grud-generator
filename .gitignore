@@ -1,1 +1,7 @@
 /vendor
+/.idea/codeception.xml
+/.idea/git_toolbox_prj.xml
+/.idea/php-test-framework.xml
+/.idea/phpspec.xml
+/.idea/vcs.xml
+/.idea
