@@ -2,7 +2,8 @@
 <module type="WEB_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" packagePrefix="ViltCrudGenerator\" />
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" packagePrefix="Rolukja\ViltCrudGenerator\" />
+      <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" packagePrefix="Rolukja\ViltCrudGenerator\Tests\" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/brick/math" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/carbonphp/carbon-doctrine-types" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/composer" />
@@ -77,6 +78,7 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/vlucas/phpdotenv" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/voku/portable-ascii" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/webmozart/assert" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

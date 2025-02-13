@@ -2,7 +2,7 @@
 
 namespace {{ namespace }};
 
-use App\Models\{{ model }};
+use App\Models\{{ Model }};
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
@@ -18,10 +18,9 @@ class {{ controllerClass }} extends Controller
      */
     public function index(): Response
     {
-        return Inertia::render('{{ model }}/Index', [
-                //'data' => {{ model }}::paginate(10),
-                'items' => {{ model }}::all(),
-            ]);
+        return Inertia::render('{{ Model }}/Index', [
+                'items' => {{ Model }}::all(),
+        ]);
     }
 
     /**
@@ -31,7 +30,7 @@ class {{ controllerClass }} extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('{{ model }}/Form');
+        return Inertia::render('{{ Model }}/Form');
     }
 
     /**
@@ -42,32 +41,37 @@ class {{ controllerClass }} extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        return Redirect::route('{{ entities }}')->with('success', '{{ model }} created.');
+         //Dynamisch erstellen
+         {{ Model }}::create($request->validate([
+                {{ validRules }}
+         ]));
+
+        return Redirect::route('{{ model }}.index')->with('success', '{{ Model }} created.');
     }
 
     /**
      * Display the specified resource.
      *
-     * @param {{ model }} ${{ entity }}
+     * @param {{ Model }} ${{ model }}
      * @return Response
      */
-    public function show({{ model }} ${{ entity }}): Response
+    public function show({{ Model }} ${{ model }}): Response
     {
-        return Inertia::render('{{ model }}/Show', [
-                'data' => ${{ entity }}
+        return Inertia::render('{{ Model }}/Show', [
+                'data' => ${{ model }}
             ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param {{ model }} ${{ entity }}
+     * @param {{ Model }} ${{ model }}
      * @return Response
      */
-    public function edit({{ model }} ${{ entity }}): Response
+    public function edit({{ Model }} ${{ model }}): Response
     {
-        return Inertia::render('{{ model }}/Form', [
-                'data' => ${{ entity }}
+        return Inertia::render('{{ Model }}/Form', [
+                'data' => ${{ model }}
             ]);
     }
 
@@ -75,36 +79,42 @@ class {{ controllerClass }} extends Controller
      * Update the specified resource in storage.
      *
      * @param Request $request
-     * @param {{ model }} ${{ entity }}
+     * @param {{ Model }} ${{ model }}
      * @return RedirectResponse
      */
-    public function update(Request $request, {{ model }} ${{ entity }}): RedirectResponse
+    public function update(Request $request, {{ Model }} ${{ model }}): RedirectResponse
     {
-        return Redirect::back()->with('success', '{{ model }} updated.');
+        ${{ model }}->update($request->validate([
+                {{ validRules }}
+        ]));
+
+        return Redirect::route('{{ model }}.index')->with('success', '{{ Model }} updated.');
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param {{ model }} ${{ entity }}
+     * @param {{ Model }} ${{ model }}
      * @return RedirectResponse
      */
-    public function destroy({{ model }} ${{ entity }}): RedirectResponse
+    public function destroy({{ Model }} ${{ model }}): RedirectResponse
     {
-        return Redirect::back()->with('success', '{{ model }} restored.');
+        ${{ model }}->delete();
+
+        return Redirect::back()->with('success', '{{ Model }} restored.');
     }
 
     /**
      * Restore the specified resource.
      *
-     * @param {{ model }} ${{ entity }}
+     * @param {{ Model }} ${{ model }}
      * @return RedirectResponse
      */
-    public function restore({{ model }} ${{ entity }}): RedirectResponse
+    public function restore({{ Model }} ${{ model }}): RedirectResponse
     {
-        ${{ entity }}->restore();
+        ${{ model }}->restore();
 
-        return Redirect::back()->with('success', '{{ model }} restored.');
+        return Redirect::back()->with('success', '{{ Model }} restored.');
     }
 }
 

@@ -1,13 +1,10 @@
 <?php
 
-namespace ViltCrudGenerator\Console\Commands;
+namespace Rolukja\ViltCrudGenerator\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class GenerateCrudCommand extends Command

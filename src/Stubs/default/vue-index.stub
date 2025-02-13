@@ -29,17 +29,12 @@ const remove = (id) => {
         <table class="w-full border-collapse border border-gray-300">
           <thead>
           <tr>
-            <th class="border border-gray-300 p-2">ID</th>
-            <th class="border border-gray-300 p-2">Name</th>
-            <th class="border border-gray-300 p-2">Description</th>
-            <th class="border border-gray-300 p-2">Actions</th>
+            {{ th }}
           </tr>
           </thead>
           <tbody>
           <tr v-for="item in items" :key="item.id">
-            <td class="border border-gray-300 p-2">{{ item.id }}</td>
-            <td class="border border-gray-300 p-2">{{ item.name }}</td>
-            <td class="border border-gray-300 p-2">{{ item.description }}</td>
+            {{ td }}
             <td class="border border-gray-300 p-2">
               <button @click="edit(item.id)" class="mr-2 p-1 bg-yellow-500 text-white rounded">Edit</button>
               <button @click="remove(item.id)" class="p-1 bg-red-500 text-white rounded">Delete</button>
