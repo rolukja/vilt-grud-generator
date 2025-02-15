@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 class GenerateCrudCommand extends Command
 {
     protected $signature = 'vilt:generate {model}';
-    protected $description = 'Generiert ein komplettes CRUD für das angegebene Model';
+    protected $description = 'Generates a complete CRUD for the specified model';
 
 
     protected array $ignoreFields = ['id', 'created_at', 'updated_at'];
