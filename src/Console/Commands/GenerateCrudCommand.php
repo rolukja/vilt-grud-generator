@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Rolukja\ViltCrudGenerator\Helper\RelationshipReader;
 
 class GenerateCrudCommand extends Command
 {
@@ -13,7 +14,7 @@ class GenerateCrudCommand extends Command
     protected $description = 'Generates a complete CRUD for the specified model';
 
 
-    protected array $ignoreFields = ['id', 'created_at', 'updated_at'];
+    protected array $ignoreFields = ['created_at', 'updated_at'];
 
 
     protected array $dbTableSchema = [];
@@ -21,6 +22,13 @@ class GenerateCrudCommand extends Command
 
     public function handle(): void
     {
+
+
+
+        $task = $this->getModelObjectByName('Task');
+        $reader = new RelationshipReader($task);
+        $relatedClasses = $reader->getRelatedClasses();
+        dd($relatedClasses);
 
 
         $model = $this->argument('model');
@@ -100,6 +108,7 @@ class GenerateCrudCommand extends Command
 
         $stub = $this->setStubPlaceholder($stub, [
             '{{ namespace }}'       => $this->getControllerNamespace(),
+            '{{ useModels }}'       => $this->getUseModels(),
             '{{ Model }}'           => $model,
             '{{ validRules }}'      => $this->getValidationRulesFromDbTableSchema(),
             '{{ model }}'           => Str::lower($model),
@@ -165,6 +174,7 @@ class GenerateCrudCommand extends Command
             '{{ model }}'      => Str::lower($model),
             '{{ Model }}'      => $model,
             '{{ layoutName }}' => $this->getLayoutName(),
+            '{{ formReactiveFields }}' => $this->getFormReactiveFields(),
             '{{ fields }}'     => $this->generateVueFormFields($model),
         ]);
 
@@ -353,4 +363,32 @@ class GenerateCrudCommand extends Command
         return $rules;
     }
 
+    private function getFormReactiveFields(): string
+    {
+        $fields = '';
+        foreach ($this->dbTableSchema as $field) {
+            $fieldName = $field['field'];
+
+            if ($fieldName === 'id') {
+                $fields .= "  {$fieldName}: props.data?.{$fieldName} || null,\n";
+            } else {
+                $fields .= "  {$fieldName}: props.data?.{$fieldName} || '',\n";
+            }
+        }
+
+        return $fields;
+    }
+
+    private function getUseModels(): string
+    {
+
+        $useModels = '';
+        foreach ($this->dbTableSchema as $field) {
+            if ($field['foreign']) {
+                $useModels .= "use App\Models\\" . Str::studly(str_replace('_id', '', $field['field'])) . ";\n";
+            }
+        }
+
+        return $useModels;
+    }
 }
