@@ -8,9 +8,7 @@ const props = defineProps({
 });
 
 const form = reactive({
-  id: props.data?.id || null,
-  name: props.data?.name || '',
-  description: props.data?.description || '',
+    {{ formReactiveFields }}
 });
 
 const submit = () => {
