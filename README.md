@@ -16,6 +16,13 @@ The **VILT CRUD Generator** is a Laravel package that automatically generates CR
    php artisan vendor:publish --provider="Rolukja\\ViltCrudGenerator\\Providers\\ViltCrudGeneratorServiceProvider"
    ```
 
+3. Install NPM dependencies:
+
+   ```bash
+   npm install vue-multiselect --save
+   ```
+
+
 ## Usage
 
 1. Create a model, for example `App\Models\Post`.
