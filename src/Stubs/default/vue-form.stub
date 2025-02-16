@@ -2,6 +2,8 @@
 import { router } from '@inertiajs/vue3';
 import { reactive } from 'vue';
 import {{ layoutName }} from '@/Layouts/{{ layoutName }}.vue';
+import Multiselect from 'vue-multiselect';
+import 'vue-multiselect/dist/vue-multiselect.min.css';
 
 const props = defineProps({
   data: Object,
