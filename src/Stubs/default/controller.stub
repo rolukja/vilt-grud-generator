@@ -71,19 +71,9 @@ class {{ controllerClass }} extends Controller
      */
     public function edit({{ Model }} ${{ model }}): Response
     {
-
-        $allProjects = Project::select('id', 'name')->get();
-
-        $task->load('projects');
-
-        return Inertia::render('Task/Form', [
-            'data' => $task,            // Task-Daten
-            'projects' => $allProjects, // Alle Projekte als Array
-        ]);
-
         return Inertia::render('{{ Model }}/Form', [
                 'data' => ${{ model }}
-            ]);
+               ]);
     }
 
     /**

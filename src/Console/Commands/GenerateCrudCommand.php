@@ -25,10 +25,10 @@ class GenerateCrudCommand extends Command
 
 
 
-        $task = $this->getModelObjectByName('Task');
-        $reader = new RelationshipReader($task);
-        $relatedClasses = $reader->getRelatedClasses();
-        dd($relatedClasses);
+//        $task = $this->getModelObjectByName('Task');
+//        $reader = new RelationshipReader($task);
+//        $relatedClasses = $reader->getRelatedClasses();
+//        dd($relatedClasses);
 
 
         $model = $this->argument('model');
