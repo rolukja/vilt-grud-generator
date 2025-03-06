@@ -1,5 +1,5 @@
 <script setup>
-import { router } from '@inertiajs/vue3';
+import { router, useForm } from '@inertiajs/vue3';
 import { reactive } from 'vue';
 import {{ layoutName }} from '@/Layouts/{{ layoutName }}.vue';
 import Multiselect from 'vue-multiselect';
@@ -9,17 +9,18 @@ const props = defineProps({
   data: Object,
 });
 
-const form = reactive({
+const form = useForm({
     {{ formReactiveFields }}
 });
 
 const submit = () => {
   if (form.id) {
-    router.put(route('{{ model }}.update', form.id), form);
+    form.put(route('{{ model }}.update', form.id));
   } else {
-    router.post(route('{{ model }}.store'), form);
+    form.post(route('{{ model }}.store'));
   }
 };
+
 </script>
 
 <template>
