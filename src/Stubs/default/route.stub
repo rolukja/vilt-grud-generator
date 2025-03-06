@@ -1,10 +1,1 @@
-Route::name('{{ model }}.')->group(function () {
-    Route::get('/{{ model }}', [{{ Controller }}::class, 'index'])->name('index');
-    Route::get('/{{ model }}/create', [{{ Controller }}::class, 'create'])->name('create');
-    Route::post('/{{ model }}', [{{ Controller }}::class, 'store'])->name('store');
-    Route::get('/{{ model }}/{{{ model }}}', [{{ Controller }}::class, 'show'])->name('show');
-    Route::get('/{{ model }}/{{{ model }}}/edit', [{{ Controller }}::class, 'edit'])->name('edit');
-    Route::put('/{{ model }}/{{{ model }}}', [{{ Controller }}::class, 'update'])->name('update');
-    Route::delete('/{{ model }}/{{{ model }}}', [{{ Controller }}::class, 'destroy'])->name('destroy');
-    Route::post('/{{ model }}/{{{ model }}}/restore', [{{ Controller }}::class, 'restore'])->name('restore');
-});
+Route::resource('{{ model }}', \App\Http\Controllers\{{ Model }}Controller::class);
